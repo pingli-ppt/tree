@@ -10,6 +10,7 @@ const resourceRoutes = require('./routes/resource');
 const redeemRoutes = require('./routes/redeem');
 const traceRoutes = require('./routes/trace');
 const nutritionRoutes = require('./routes/nutrition');
+const customPureeRoutes = require('./routes/customPuree');
 
 require('dotenv').config();
 
@@ -36,6 +37,7 @@ app.use('/api/resource', resourceRoutes);
 app.use('/api/redeem', redeemRoutes);
 app.use('/api/trace', traceRoutes);
 app.use('/api/nutrition', nutritionRoutes);
+app.use('/api/redeem', customPureeRoutes);
 
 // 6. 对于所有非 API 的 GET 请求，返回 index.html（支持前端路由）
 app.get('*', (req, res) => {
