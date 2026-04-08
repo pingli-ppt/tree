@@ -18,8 +18,40 @@ exports.searchKnowledge = async (req, res) => {
 };
 
 exports.getQuizQuestion = async (req, res) => {
-  const count = await NutritionKnowledge.countDocuments({ question: { $exists: true, $ne: null } });
-  const random = Math.floor(Math.random() * count);
-  const q = await NutritionKnowledge.findOne({ question: { $exists: true } }).skip(random);
-  res.json({ id: q._id, question: q.question, options: ['选项A','选项B','选项C'], answer: q.answer });
+  try {
+    // 随机取一条（更合理）
+    const count = await NutritionKnowledge.countDocuments();
+
+    let q = null;
+
+    if (count > 0) {
+      const rand = Math.floor(Math.random() * count);
+      q = await NutritionKnowledge.findOne().skip(rand);
+    }
+
+    // ⭐ 如果数据库没数据 → 用默认题（关键！）
+    if (!q) {
+      return res.json({
+        id: 'default1',
+        question: '6个月宝宝可以吃什么辅食？',
+        options: [
+          { key: 'A', text: '苹果泥' },
+          { key: 'B', text: '辣条' },
+          { key: 'C', text: '可乐' }
+        ],
+        correctAnswer: 'A'
+      });
+    }
+
+    // ⭐ 有数据正常返回
+    res.json({
+      id: q._id,
+      question: q.question,
+      options: q.options, // 建议你数据库也存成这个结构
+      correctAnswer: q.answer
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
