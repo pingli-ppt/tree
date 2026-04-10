@@ -9,19 +9,21 @@ exports.getUserTrees = async (req, res) => {
   try {
     const { userId } = req.query;
     let trees = await FruitTree.find({ userId });
-    // 更新每个树的阶段
+    const treesWithDays = [];
+    
     for (let tree of trees) {
+      // 计算当前阶段和剩余天数
       const { stage, remainingDays } = calculateStage(tree);
       tree.stage = stage;
-      if (stage === 4 && tree.stage !== 4) {
-        // 刚进入收获期
-        await tree.save();
-      } else {
-        await tree.save();
-      }
+      await tree.save();
+      
+      // 转换为普通对象并添加剩余天数
+      const treeObj = tree.toObject();
+      treeObj.remainingDays = remainingDays;
+      treesWithDays.push(treeObj);
     }
-    trees = await FruitTree.find({ userId });
-    res.json(trees);
+    
+    res.json(treesWithDays);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

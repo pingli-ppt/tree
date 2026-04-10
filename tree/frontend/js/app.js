@@ -27,4 +27,8 @@ window.addEventListener('DOMContentLoaded', () => {
         localStorage.clear();
         location.reload();
     });
+    // 档案按钮
+    document.getElementById('profileBtn')?.addEventListener('click', () => {
+        BabyProfileComponent.renderModal();
+});
 });

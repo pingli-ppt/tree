@@ -356,6 +356,19 @@ body {
     backdrop-filter: blur(4px);
 }
 
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #2a6b2f;
+    margin-left: 10px;
+}
+
+.icon-btn:hover {
+    color: #e67e22;
+}
+
 /* 模态框科技感 — 白绿版本 */
 .modal {
     position: fixed;

@@ -35,12 +35,66 @@ const TaskPanel = {
                 btn.onclick = async () => {
                     const taskId = btn.dataset.taskId;
                     let payload = {};
+
                     if (taskId === 'quiz') {
-                        // 获取随机题目弹窗
-                        const quizRes = await api.getQuizQuestion();
-                        const q = quizRes.data;
-                        const answer = prompt(`答题: ${q.question}\n选项: A 正确 B 错误 C 不确定 (请输入答案字母)`);
-                        payload = { answer: answer?.toUpperCase(), questionId: q.id };
+                        try {
+                            // 获取题目
+                            const quizRes = await axios.get(`/api/quiz/question?userId=${window.currentUserId}`);
+                            const { question, options } = quizRes.data;
+        
+                            // 构建选项HTML
+                            const optionsHtml = options.map(opt => 
+                                `<button class="quiz-option" data-answer="${opt[0]}">${opt}</button>`
+                            ).join('');
+        
+                            // 显示弹窗
+                            showModal('🥣 辅食知识答题', `
+                                <div class="quiz-container">
+                                    <p style="font-weight:bold; margin-bottom:15px;">${question}</p>
+                                    <div style="display:flex; flex-direction:column; gap:10px;">
+                                        ${optionsHtml}
+                                    </div>
+                                </div>
+                            `);
+        
+                            // 绑定选项点击
+                            document.querySelectorAll('.quiz-option').forEach(btn => {
+                                btn.onclick = async () => {
+                                    const userAnswer = btn.dataset.answer;
+                                    btn.innerText = '提交中...';
+                                    btn.disabled = true;
+                
+                                    try {
+                                        const checkRes = await axios.post('/api/quiz/check', {
+                                            userId: window.currentUserId,
+                                            question: question,
+                                            options: options,
+                                            userAnswer: userAnswer
+                                        });
+                    
+                                        if (checkRes.data.correct) {
+                                            showToast(checkRes.data.explanation);
+                                            await api.completeDailyTask(window.currentUserId, taskId, {
+                                                answer: userAnswer,
+                                                timestamp: Date.now()
+                                            });
+                                            closeModal();
+                                            await TaskPanel.render();
+                                            await loadResources();
+                                        } else {
+                                            showToast(checkRes.data.explanation, true);
+                                            closeModal();
+                                        }
+                                    } catch (err) {
+                                        showToast('判题失败', true);
+                                        closeModal();
+                                    }
+                                };
+                            });
+                        } catch (err) {
+                            showToast('获取题目失败', true);
+                        }
+                        return; // 重要：避免继续执行下面的prompt逻辑
                     }
                     try {
                         await api.completeDailyTask(window.currentUserId, taskId, payload);

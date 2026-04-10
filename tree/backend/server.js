@@ -1,6 +1,10 @@
+// 1. 最先加载环境变量
+require('dotenv').config();
+
+// 2. 然后引入其他模块
 const express = require('express');
 const cors = require('cors');
-const path = require('path');        // 提供静态文件所需
+const path = require('path');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
@@ -11,24 +15,22 @@ const redeemRoutes = require('./routes/redeem');
 const traceRoutes = require('./routes/trace');
 const nutritionRoutes = require('./routes/nutrition');
 const customPureeRoutes = require('./routes/customPuree');
+const quizRoutes = require('./routes/quiz');
 
-require('dotenv').config();
-
-// 1. 连接数据库
+// 3. 连接数据库
 connectDB();
 
-// 2. 创建 Express 实例
+// 4. 创建 Express 实例
 const app = express();
 
-// 3. 全局中间件
+// 5. 全局中间件
 app.use(cors());
 app.use(express.json());
 
-// 4. 提供前端静态文件（关键：必须在路由之前，但要在 app 定义之后）
-//    假设前端目录位于 backend 的上一级目录下的 frontend 文件夹
+// 6. 提供前端静态文件
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// 5. API 路由
+// 7. API 路由
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/tree', treeRoutes);
@@ -38,14 +40,15 @@ app.use('/api/redeem', redeemRoutes);
 app.use('/api/trace', traceRoutes);
 app.use('/api/nutrition', nutritionRoutes);
 app.use('/api/redeem', customPureeRoutes);
+app.use('/api/quiz', quizRoutes);
 
-// 6. 对于所有非 API 的 GET 请求，返回 index.html（支持前端路由）
+// 8. 对于所有非 API 的 GET 请求，返回 index.html
 app.get('*', (req, res) => {
   if (!req.path.startsWith('/api')) {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
   }
 });
 
-// 7. 启动服务器
+// 9. 启动服务器
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

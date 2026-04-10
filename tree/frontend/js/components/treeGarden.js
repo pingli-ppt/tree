@@ -10,11 +10,42 @@ const TreeGarden = {
                 container.innerHTML = '<p>暂无果树，去完成任务获取新果树吧～</p>';
                 return;
             }
-            let html = '<div class="tree-grid">';
+
+            // 档案提示（在果树列表上方）
+            let html = '';
+            const profileRes = await api.getBabyProfile(window.currentUserId);
+            const profile = profileRes.data || {};
+            if (!profile.monthAge) {
+                html += `<div class="profile-tip" style="background:#f0f7ff; padding:10px; border-radius:8px; margin-bottom:15px;">
+                    📝 完善 <a href="#" id="completeProfileTip" style="color:#2a6b2f;">宝宝档案</a>，解锁定制果树功能
+                </div>`;
+            }
+
+            html += '<div class="tree-grid">';
             for (const tree of trees) {
                 const stageNames = ['🌱 幼苗期', '🌸 开花期', '🍏 结果期', '🍎 成熟期', '🎁 可收获'];
                 const stageName = stageNames[tree.stage] || '生长中';
-                const progressPercent = tree.stage < 4 ? ( (1 - (tree.remainingDays / [2,2,3,2][tree.stage])) * 100 ) : 100;
+                
+                // 计算剩余天数
+                let remainingDays = tree.remainingDays;
+                if (remainingDays === undefined && tree.plantedAt) {
+                    const plantedAt = new Date(tree.plantedAt);
+                    const now = new Date();
+                    const daysPassed = (now - plantedAt) / (1000 * 60 * 60 * 24);
+        
+                    // 根据果树类型设置总成长天数
+                    const growthDaysMap = {
+                        'apple': 30,
+                        'cherry': 45,
+                        'peach': 40,
+                        'banana': 35,
+                        'dragonfruit': 50
+                    };
+                    const totalDays = growthDaysMap[tree.treeType] || 30;
+                    remainingDays = Math.max(0, totalDays - daysPassed);
+                }
+
+                const progressPercent = tree.stage < 4 ? ( (1 - (remainingDays / [2,2,3,2][tree.stage])) * 100 ) : 100;
                 html += `
                     <div class="tree-card" data-tree-id="${tree._id}">
                         <div class="tree-header">
@@ -23,7 +54,7 @@ const TreeGarden = {
                         </div>
                         <div class="stage-progress">
                             <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100,progressPercent)}%"></div></div>
-                            <small>${tree.stage<4 ? `还需约${tree.remainingDays?.toFixed(1)}天` : '成熟可收获'}</small>
+                            <small>${tree.stage<4 ? `还需约${remainingDays?.toFixed(1)}天` : '成熟可收获'}</small>
                         </div>
                         <div class="tree-actions">
                             ${tree.stage < 4 ? `<button class="btn btn-sm btn-icon" data-action="accelerate" data-type="fertilizer">🌿 肥料加速(-12h)</button>
