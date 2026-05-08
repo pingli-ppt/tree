@@ -11,7 +11,7 @@ const RedeemShop = {
             // 获取订单
             let orders = [];
             try {
-                const ordersRes = await axios.get(`/api/redeem/orders?userId=${window.currentUserId}`);
+                const ordersRes = await axios.get(`http://localhost:3000/api/redeem/orders?userId=${window.currentUserId}`);
                 orders = ordersRes.data || [];
             } catch(e) {
                 console.log('订单接口暂不可用');
